@@ -137,7 +137,38 @@
 
 	class Content {
 		constructor(el) {
+			this.DOM = {el: el};
+			this.DOM.title = this.DOM.el.querySelector('.content__title');
+			this.DOM.assetWrap = this.DOM.el.querySelector('.content__asset-wrap');
+		}
+		show() {
+			this.DOM.el.classList.add('content__item--current');
 
+			TweenMax.staggerTo([this.DOM.title,this.DOM.assetWrap], 0.8, {
+                ease: Power4.easeOut,
+                delay: 0.4,
+                opacity: 1,
+                startAt: {y: 40},
+                y: 0
+            }, 0.05, this.showComplete, [this.DOM.assetWrap]);
+		}
+
+		showComplete(assetWrap) {
+			this.isVideo = assetWrap.getElementsByTagName('video').length > 0 ? true : false;
+			console.log("Video:" + this.isVideo);
+			if(this.isVideo) {
+				assetWrap.getElementsByTagName('video')[0].play();
+			}
+		}
+		
+		hide() {
+			this.DOM.el.classList.remove('content__item--current');
+
+			TweenMax.staggerTo([this.DOM.title,this.DOM.assetWrap].reverse(), 0.3, {
+                ease: Power3.easeIn,
+                opacity: 0,
+                y: 10
+            }, 0.01);
 		}
 	}
 
@@ -155,6 +186,11 @@
             }
             // Current slide position.
             this.current = 0;
+            // deco is the background square behind each slide and the thing that animates full screen when clicking into a slide
+            this.DOM.deco = this.DOM.el.querySelector('.slideshow__deco');
+
+            this.contents = [];
+            Array.from(document.querySelectorAll('.content > .content__item')).forEach(contentEl => this.contents.push(new Content(contentEl)));
 
             // Set the current/next/previous slides. 
             this.render();
@@ -219,10 +255,67 @@
             });
 
             // callback;
+            // for(var i = 0; i < 3; i++) {
+            	
+            // }
             setTimeout(function() {
             	slideshow.navigate('next')
             },2000);
 
+        }
+
+        showContent(finishShowContent) {
+        	if ( this.isContentOpen || this.isAnimating ) return;
+            
+            this.isContentOpen = true;
+            this.DOM.el.classList.add('slideshow--previewopen');
+            TweenMax.to(this.DOM.deco, .8, {
+                ease: Power4.easeInOut,
+                scaleX: winsize.width/this.DOM.deco.offsetWidth,
+                scaleY: winsize.height/this.DOM.deco.offsetHeight,
+                x: -20,
+                y: 20,
+                onComplete: finishShowContent,
+                onCompleteParams: [this.DOM.deco]
+            });
+            // Move away right/left slides.
+            this.prevSlide.moveToPosition({position: -2});
+            this.nextSlide.moveToPosition({position: 2});
+            // Position the current slide and reset its image scale value.
+            this.currentSlide.moveToPosition({position: 3, resetImageScale: true});
+            // Show content and back arrow (to close the content).
+            this.contents[this.current].show();
+            // Hide texts.
+            // this.currentSlide.hideTexts(true);
+        }
+        finishShowContent() {
+        	console.log("Finish Show Content Called");
+
+        }
+        hideContent() {
+            if ( !this.isContentOpen || this.isAnimating ) return;
+
+            this.DOM.el.classList.remove('slideshow--previewopen');
+
+            // Hide content.
+            this.contents[this.current].hide();
+
+            TweenMax.to(this.DOM.deco, .8, {
+                ease: Power4.easeInOut,
+                scaleX: 1,
+                scaleY: 1,
+                x: 0,
+                y: 0
+            });
+            // Move in right/left slides.
+            this.prevSlide.moveToPosition({position: -1});
+            this.nextSlide.moveToPosition({position: 1});
+            // Position the current slide.
+            this.currentSlide.moveToPosition({position: 0}).then(() => {
+                this.isContentOpen = false;
+            });
+            // Show texts.
+            // this.currentSlide.showTexts();
         }
 		
 	}
@@ -237,17 +330,16 @@
 	// Init slideshow.
     const slideshow = new Slideshow(document.querySelector('.slideshow'));
 
+	// setTimeout(function() {
+	// 	slideshow.navigate('next')
+	// },2000);
 
- 	//    function autoPlay() {
-	//     setTimeout(function() {
-	//     	slideshow.navigate(autoPlay(),'next');
-	//     }, 2000);
-	// }
-
-	// autoPlay();
 	setTimeout(function() {
-		slideshow.navigate('next')
+	 	slideshow.showContent(slideshow.finishShowContent);
 	},2000);
 
+	// setTimeout(function() {
+	//  	slideshow.hideContent();
+	// },4000);	
 
 }
