@@ -51,7 +51,6 @@
         }
         // Positions one slide (left, right or current) in the viewport.
         position(pos) {
-        	console.log("position called");
             TweenMax.set(this.DOM.imgWrap, {
                 x: this.transforms[pos].x, 
                 y: this.transforms[pos].y, 
@@ -121,16 +120,16 @@
                     rotationY: 0,
                     rotationZ: this.transforms[settings.position+2].rotation,
                     onStart: settings.from !== undefined ? () => TweenMax.set(this.DOM.imgWrap, {opacity: 1}) : null,
-                    onComplete: resolve
+                    onComplete: resolve 
                 });
                 
                 // Reset image scale when showing the content of the current slide.
-                if ( settings.resetImageScale ) {
-                    TweenMax.to(this.DOM.img, .8, {
-                        ease: Power4.easeInOut,
-                        scale: 1
-                    });
-                }
+                // if ( settings.resetImageScale ) {
+                //     TweenMax.to(this.DOM.img, .8, {
+                //         ease: Power4.easeInOut,
+                //         scale: 1
+                //     });
+                // }
             });
         }
 	}
@@ -144,23 +143,31 @@
 		show() {
 			this.DOM.el.classList.add('content__item--current');
 
-			TweenMax.staggerTo([this.DOM.title,this.DOM.assetWrap], 0.8, {
+			// TweenMax.staggerTo([this.DOM.title,this.DOM.assetWrap], 0.8, {
+   //              ease: Power4.easeOut,
+   //              delay: 0.4,
+   //              opacity: 1,
+   //              startAt: {y: 40},
+   //              y: 0
+   //          }, 0.05, this.showComplete, [this.DOM.assetWrap]);
+
+            TweenMax.staggerTo([this.DOM.title,this.DOM.assetWrap], 0.8, {
                 ease: Power4.easeOut,
                 delay: 0.4,
                 opacity: 1,
                 startAt: {y: 40},
                 y: 0
-            }, 0.05, this.showComplete, [this.DOM.assetWrap]);
+            }, 0.05, slideshow.showComplete, [this.DOM.assetWrap]);
 		}
 
-		showComplete(assetWrap) {
-			this.isVideo = assetWrap.getElementsByTagName('video').length > 0 ? true : false;
-			console.log("Video:" + this.isVideo);
-			if(this.isVideo) {
-				assetWrap.getElementsByTagName('video')[0].play();
-			}
-		}
-		
+		// showComplete(assetWrap) {
+		// 	this.isVideo = assetWrap.getElementsByTagName('video').length > 0 ? true : false;
+		// 	console.log("Video:" + this.isVideo);
+		// 	if(this.isVideo) {
+		// 		assetWrap.getElementsByTagName('video')[0].play();
+		// 	}
+		// }
+
 		hide() {
 			this.DOM.el.classList.remove('content__item--current');
 
@@ -192,11 +199,13 @@
             this.contents = [];
             Array.from(document.querySelectorAll('.content > .content__item')).forEach(contentEl => this.contents.push(new Content(contentEl)));
 
+            // init video and content event handlers
+            this.initVideoEvents();
+
             // Set the current/next/previous slides. 
             this.render();
 		}
 		render() {
-			console.log("render");
             // The current, next, and previous slides.
             this.currentSlide = this.slides[this.current];
             this.nextSlide = this.slides[this.current+1 <= this.slidesTotal-1 ? this.current+1 : 0];
@@ -237,7 +246,7 @@
             this.nextSlide.moveToPosition({position: direction === 'next' ? 0 : 2, delay: direction === 'next' ? 0.14 : 0 }).then(() => {
                 if ( direction === 'prev' ) {
                     this.nextSlide.hide();
-                }
+                }	
             });
 
             if ( direction === 'next' ) {
@@ -252,16 +261,23 @@
                 [this.nextSlide,this.currentSlide,this.prevSlide].forEach(slide => slide.reset());
                 this.render();
                 this.isAnimating = false;
+                // **********************
+                slideshow.afterNavigate();
+                // slideshow.showContent(); // slideshow.finishShowContent
             });
 
             // callback;
             // for(var i = 0; i < 3; i++) {
             	
             // }
-            setTimeout(function() {
-            	slideshow.navigate('next')
-            },2000);
+            // setTimeout(function() {
+            // 	slideshow.navigate('next')
+            // },2000);
+            
+        }
 
+        afterNavigate() {
+        	slideshow.showContent();
         }
 
         showContent(finishShowContent) {
@@ -288,9 +304,9 @@
             // Hide texts.
             // this.currentSlide.hideTexts(true);
         }
+        // callback method for showContent
         finishShowContent() {
-        	console.log("Finish Show Content Called");
-
+        	// not being used currently
         }
         hideContent() {
             if ( !this.isContentOpen || this.isAnimating ) return;
@@ -305,7 +321,8 @@
                 scaleX: 1,
                 scaleY: 1,
                 x: 0,
-                y: 0
+                y: 0,
+                onComplete: this.finishHideContent
             });
             // Move in right/left slides.
             this.prevSlide.moveToPosition({position: -1});
@@ -317,7 +334,32 @@
             // Show texts.
             // this.currentSlide.showTexts();
         }
-		
+        // callback method for hideContent
+        finishHideContent() {
+        	slideshow.navigate('next');
+        }
+
+        // callback method for when content is shown and then playing the video
+		showComplete(assetWrap) {
+			console.log(assetWrap.getElementsByTagName('video') + " : value of assetwrap");
+			this.isVideo = assetWrap.getElementsByTagName('video').length > 0 ? true : false;
+			
+			if(this.isVideo) {
+				var video = assetWrap.getElementsByTagName('video')[0];
+				video.addEventListener("ended",function() { slideshow.hideContent(); });
+				video.play();
+			} else {
+				// content is not a video so we just let it hang for a bit before we call next
+				
+				setTimeout(function() {
+				 	slideshow.hideContent(); // slideshow.finishShowContent callback unneeded right now
+				},6000);
+			}
+		}
+		// init events for video and html content
+		initVideoEvents() {
+
+		}
 	}
 
 
@@ -335,8 +377,8 @@
 	// },2000);
 
 	setTimeout(function() {
-	 	slideshow.showContent(slideshow.finishShowContent);
-	},2000);
+	 	slideshow.showContent(); // slideshow.finishShowContent callback unneeded right now
+	},6000);
 
 	// setTimeout(function() {
 	//  	slideshow.hideContent();

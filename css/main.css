@@ -1,3 +1,25 @@
+@font-face {
+  font-family: 'Brown-Bold';
+  src: url("../fonts/lineto-brown-bold.ttf") format("truetype");
+  font-weight: 900; }
+
+@font-face {
+  font-family: 'Brown-Italic';
+  src: url("../fonts/lineto-brown-italic.ttf") format("truetype");
+  font-weight: normal;
+  font-style: italic; }
+
+@font-face {
+  font-family: 'Brown-Light';
+  src: url("../fonts/lineto-brown-light.ttf") format("truetype");
+  font-weight: 300; }
+
+@font-face {
+  font-family: 'Brown-Regular';
+  src: url("../fonts/lineto-brown-regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal; }
+
 article, aside, details, figcaption, figure, footer, header, hgroup, main, nav, section, summary {
   display: block; }
 
@@ -139,7 +161,7 @@ table {
   box-sizing: border-box; }
 
 body {
-  background-color: #000;
+  background: radial-gradient(circle at center 10%, #2a2c3e 0%, #000 65%) 100% no-repeat;
   margin: 0;
   padding: 0; }
 
@@ -222,13 +244,42 @@ body {
   overflow: visible; }
 
 .content__title {
+  font-family: 'Brown-Regular';
   color: white;
-  font-size: 3.25rem;
-  margin: 0 0 0.25rem; }
+  font-size: 3.625em;
+  margin: 0 0 0.4em; }
 
 .content__asset-wrap video {
   width: 100%;
   height: 100%; }
+
+.agenda {
+  display: grid;
+  grid-auto-rows: auto; }
+  .agenda__item {
+    display: grid;
+    grid-template-columns: 20% 75%;
+    grid-column-gap: 5%;
+    font-family: 'Brown-Regular';
+    padding: 3em 2em; }
+    .agenda__item--current {
+      border: 1px solid #505050;
+      background-color: rgba(80, 80, 80, 0.2); }
+    .agenda__item:not(.agenda__item--current) {
+      border-bottom: 1px solid #505050; }
+  .agenda__time {
+    font-size: 1.125em;
+    font-family: 'Brown-Light';
+    color: #D0CECE; }
+  .agenda__text p:first-child {
+    font-size: 1.125em;
+    font-family: 'Brown-Bold';
+    color: #FFFFFF;
+    text-transform: uppercase; }
+  .agenda__text p:first-child ~ p {
+    font-size: 1em;
+    font-family: 'Brown-Regular';
+    color: #D0CECE; }
 
 .js .content__title,
 .js .content__asset-wrap {
