@@ -52,31 +52,45 @@ body {
 	height: 100vh;
 	width: 100%;
 	display: grid;
-	grid-template-rows: 100%;
-	grid-template-columns: 27% 27% 27%;
-	grid-column-gap: 9.5%;
+	grid-template-columns: repeat(3,26%); // repeat(3,calc(100%/3));
+	grid-column-gap: 11%;
 	grid-template-rows: 100%;
 	grid-template-areas: '... slide ...';
 }
 
+// slide > slide__img-wrap > slide__img
+
+// slide height 640px out of 960px
+
+$slide-height: 640px;
+$slideshow-height: 960px;
+$slide-line-color: #C2C2C2;
+
 .slide {
 	width: 100%;
-	padding: 10vh 0 7vh;
-	display: flex;
-	pointer-events: none;
-	cursor: pointer;
-	position: relative;
 	height: 100%;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	position: relative;
 	grid-area: slide;
 }
 
 .slide__img-wrap {
 	width: 100%;
-	overflow: hidden;
+	height: ($slide-height / $slideshow-height) * 100%;
+	// overflow: hidden;
 	z-index: 100;
-	height: 80%;
-	top: 10%;
 	position: absolute;
+	.slide__line {
+		width: 100px;
+		height: 1px;
+		background-color: $slide-line-color;
+		// background-image: linear-gradient(45deg, #0A93EB 0%, #00FFAE 50%, #D2FE50 100%);
+		position: absolute;
+		top: -40px;
+		z-index: 1000;
+	}
 }
 
 .slide__img {
@@ -85,29 +99,56 @@ body {
 	left: 0;
 	top: 0;
 	background-size: cover;
-	background-position: 50% 50%;
+	background-position: left top; // 50% 50%;
 	position: absolute;
 	pointer-events: none;
 	/* transform: scale3d(1.01,1.01,1); */
 }
 
-.slideshow__deco {
-	grid-area: slide;
-	background: $deco-color-bg;
+$slide-title-color: #FFFFFF;
+$slide-subtitle-color: #FFFFFF;
+
+.slide__title-wrap {
 	width: 100%;
-	height: 80%;
-	align-self: center;
-	position: relative;
-	margin: -40px 0 0 0;
-	right: -20px;
+	z-index: 1000;
+	position: absolute;
+	bottom: -3.75em;
+	left: -0.75em;
 }
 
-.js .slide__img-wrap {
+.slide__title {
+	font-size: 3.625em;
+	font-family: 'Brown-Bold';
+	color: $slide-title-color;
+	margin: 0 0 0.375em;
+}
+
+.slide__subtitle {
+	font-size: 1.25em;
+	font-family: 'Brown-Bold';
+	color: $slide-subtitle-color;
+}
+
+.slideshow__deco {
+	grid-area: slide;
+	width: 100%;
+	height: ($slide-height / $slideshow-height) * 100%;
+	align-self: center;
+	position: relative;
+	margin: -80px 0 0 0;
+	right: -40px;
+	background: $deco-color-bg;
+}
+
+.js .slide__img-wrap,
+.js .slide__title-wrap, 
+.js .slide__line {
 	opacity: 0;
 	pointer-events: none;
 }
 
-.js .slide--current .slide__img-wrap {
+.js .slide--current .slide__img-wrap, 
+.js .slide--current .slide__line {
 	opacity: 1;
 	pointer-events: auto;
 }
@@ -129,7 +170,12 @@ body {
 	padding: calc(10vh + 5rem) 0 7vh;
 	width: 50.5%;
 	right: 7.5%;
-	overflow: visible;
+	overflow: hidden;
+	// border: 1px solid red;
+}
+
+.content__item--current {
+	// border: 1px solid yellow;
 }
 
 .content__title {
@@ -141,9 +187,11 @@ body {
 
 // todo change this nesting, what about when content is html
 .content__asset-wrap {
+	//border: 1px solid red;
 	video {
 		width: 100%;
 		height: 100%;
+		object-fit: cover;
 	}
 }
 

@@ -172,29 +172,32 @@ body {
   height: 100vh;
   width: 100%;
   display: grid;
-  grid-template-rows: 100%;
-  grid-template-columns: 27% 27% 27%;
-  grid-column-gap: 9.5%;
+  grid-template-columns: repeat(3, 26%);
+  grid-column-gap: 11%;
   grid-template-rows: 100%;
   grid-template-areas: '... slide ...'; }
 
 .slide {
   width: 100%;
-  padding: 10vh 0 7vh;
-  display: flex;
-  pointer-events: none;
-  cursor: pointer;
-  position: relative;
   height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
   grid-area: slide; }
 
 .slide__img-wrap {
   width: 100%;
-  overflow: hidden;
+  height: 66.66667%;
   z-index: 100;
-  height: 80%;
-  top: 10%;
   position: absolute; }
+  .slide__img-wrap .slide__line {
+    width: 100px;
+    height: 1px;
+    background-color: #C2C2C2;
+    position: absolute;
+    top: -40px;
+    z-index: 1000; }
 
 .slide__img {
   width: 100%;
@@ -202,26 +205,47 @@ body {
   left: 0;
   top: 0;
   background-size: cover;
-  background-position: 50% 50%;
+  background-position: left top;
   position: absolute;
   pointer-events: none;
   /* transform: scale3d(1.01,1.01,1); */ }
 
+.slide__title-wrap {
+  width: 100%;
+  z-index: 1000;
+  position: absolute;
+  bottom: -3.75em;
+  left: -0.75em; }
+
+.slide__title {
+  font-size: 3.625em;
+  font-family: 'Brown-Bold';
+  color: #FFFFFF;
+  margin: 0 0 0.375em; }
+
+.slide__subtitle {
+  font-size: 1.25em;
+  font-family: 'Brown-Bold';
+  color: #FFFFFF; }
+
 .slideshow__deco {
   grid-area: slide;
-  background: #141414;
   width: 100%;
-  height: 80%;
+  height: 66.66667%;
   align-self: center;
   position: relative;
-  margin: -40px 0 0 0;
-  right: -20px; }
+  margin: -80px 0 0 0;
+  right: -40px;
+  background: #141414; }
 
-.js .slide__img-wrap {
+.js .slide__img-wrap,
+.js .slide__title-wrap,
+.js .slide__line {
   opacity: 0;
   pointer-events: none; }
 
-.js .slide--current .slide__img-wrap {
+.js .slide--current .slide__img-wrap,
+.js .slide--current .slide__line {
   opacity: 1;
   pointer-events: auto; }
 
@@ -241,7 +265,7 @@ body {
   padding: calc(10vh + 5rem) 0 7vh;
   width: 50.5%;
   right: 7.5%;
-  overflow: visible; }
+  overflow: hidden; }
 
 .content__title {
   font-family: 'Brown-Regular';
@@ -251,7 +275,8 @@ body {
 
 .content__asset-wrap video {
   width: 100%;
-  height: 100%; }
+  height: 100%;
+  object-fit: cover; }
 
 .agenda {
   display: grid;

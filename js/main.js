@@ -6,6 +6,13 @@
 			this.DOM = {el: el};
 			// The image wrap element.
             this.DOM.imgWrap = this.DOM.el.querySelector('.slide__img-wrap');
+            // The texts: the parent wrap, title, number and side text.
+            this.DOM.texts = {
+                wrap: this.DOM.el.querySelector('.slide__title-wrap'),
+                title: this.DOM.el.querySelector('.slide__title'),
+                number: this.DOM.el.querySelector('.slide__subtitle')
+            };
+            this.DOM.animatedLine = this.DOM.el.querySelector('.slide__line');
             // Calculate the sizes of the image wrap. 
             this.calcSizes();
             // And also the transforms needed per position. 
@@ -32,9 +39,9 @@
             */
             this.transforms = [
                 {x: -1*(winsize.width/2+this.width), y: -1*(winsize.height/2+this.height), rotation: -30},
-                {x: -1*(winsize.width/2-this.width/3), y: -1*(winsize.height/2-this.height/3), rotation: 0},
+                {x: -1*(winsize.width/2), y: -1*(winsize.height/2), rotation: 0},
                 {x: 0, y: 0, rotation: 0},
-                {x: winsize.width/2-this.width/3, y: winsize.height/2-this.height/3, rotation: 0},
+                {x: winsize.width/2, y: winsize.height/2, rotation: 0},
                 {x: winsize.width/2+this.width, y: winsize.height/2+this.height, rotation: 30},
                 {x: -1*(winsize.width/2 - this.width/2 - winsize.width*0.075), y: 0, rotation: 0}
             ];
@@ -122,15 +129,13 @@
                     onStart: settings.from !== undefined ? () => TweenMax.set(this.DOM.imgWrap, {opacity: 1}) : null,
                     onComplete: resolve 
                 });
-                
-                // Reset image scale when showing the content of the current slide.
-                // if ( settings.resetImageScale ) {
-                //     TweenMax.to(this.DOM.img, .8, {
-                //         ease: Power4.easeInOut,
-                //         scale: 1
-                //     });
-                // }
             });
+        }
+        hideTexts() {
+        	TweenMax.to(this.DOM.texts.wrap, 0.4, {opacity: 0});
+        }
+        showTexts() {
+        	TweenMax.set([this.DOM.texts.wrap,this.DOM.animatedLine], {opacity: 1});
         }
 	}
 
@@ -143,31 +148,14 @@
 		show() {
 			this.DOM.el.classList.add('content__item--current');
 
-			// TweenMax.staggerTo([this.DOM.title,this.DOM.assetWrap], 0.8, {
-   //              ease: Power4.easeOut,
-   //              delay: 0.4,
-   //              opacity: 1,
-   //              startAt: {y: 40},
-   //              y: 0
-   //          }, 0.05, this.showComplete, [this.DOM.assetWrap]);
-
             TweenMax.staggerTo([this.DOM.title,this.DOM.assetWrap], 0.8, {
                 ease: Power4.easeOut,
                 delay: 0.4,
                 opacity: 1,
                 startAt: {y: 40},
                 y: 0
-            }, 0.05, slideshow.showComplete, [this.DOM.assetWrap]);
+            }, 0.05, slideshow.showComplete, [this.DOM.assetWrap, this.DOM.el]);
 		}
-
-		// showComplete(assetWrap) {
-		// 	this.isVideo = assetWrap.getElementsByTagName('video').length > 0 ? true : false;
-		// 	console.log("Video:" + this.isVideo);
-		// 	if(this.isVideo) {
-		// 		assetWrap.getElementsByTagName('video')[0].play();
-		// 	}
-		// }
-
 		hide() {
 			this.DOM.el.classList.remove('content__item--current');
 
@@ -199,11 +187,9 @@
             this.contents = [];
             Array.from(document.querySelectorAll('.content > .content__item')).forEach(contentEl => this.contents.push(new Content(contentEl)));
 
-            // init video and content event handlers
-            this.initVideoEvents();
-
             // Set the current/next/previous slides. 
             this.render();
+            this.currentSlide.showTexts();
 		}
 		render() {
             // The current, next, and previous slides.
@@ -239,10 +225,9 @@
             });
             
             this.currentSlide.moveToPosition({position: direction === 'next' ? -1 : 1, delay: 0.07 });
-            // this.currentSlide.hideTexts();
+            this.currentSlide.hideTexts();
             
             // this.bounceDeco(direction, 0.07);
-            
             this.nextSlide.moveToPosition({position: direction === 'next' ? 0 : 2, delay: direction === 'next' ? 0.14 : 0 }).then(() => {
                 if ( direction === 'prev' ) {
                     this.nextSlide.hide();
@@ -250,10 +235,10 @@
             });
 
             if ( direction === 'next' ) {
-                // this.nextSlide.showTexts();
+                this.nextSlide.showTexts();
             }
             else {
-                // this.prevSlide.showTexts();
+                this.prevSlide.showTexts();
             }
             
             this.upcomingSlide.moveToPosition({position: direction === 'next' ? 1 : -1, from: direction === 'next' ? 2 : -2, delay: 0.21 }).then(() => {
@@ -261,23 +246,34 @@
                 [this.nextSlide,this.currentSlide,this.prevSlide].forEach(slide => slide.reset());
                 this.render();
                 this.isAnimating = false;
-                // **********************
+                // can probably call slideshow.showContent() directly
                 slideshow.afterNavigate();
-                // slideshow.showContent(); // slideshow.finishShowContent
             });
-
-            // callback;
-            // for(var i = 0; i < 3; i++) {
-            	
-            // }
-            // setTimeout(function() {
-            // 	slideshow.navigate('next')
-            // },2000);
-            
         }
 
         afterNavigate() {
-        	slideshow.showContent();
+        	setTimeout(function() {
+			 	slideshow.showContent();
+			},600);
+        }
+
+        animateLine(reverse) {
+            
+            if(reverse) {
+                var leftPos = this.contents[this.current].DOM.el.offsetLeft - (this.contents[this.current].DOM.el.offsetLeft * (17.5/100));
+                var lineEl = this.currentSlide.DOM.animatedLine;
+                var lineTl = new TimelineMax({delay:0});
+                var lineTlEasing = Power4.easeInOut;
+                lineTl.add( TweenLite.to(lineEl, 0.8, {  width: 0, x: leftPos, ease: lineTlEasing}));
+                lineTl.play();
+            } else {
+                var leftPos = this.contents[this.current].DOM.el.offsetLeft - (this.contents[this.current].DOM.el.offsetLeft * (17.5/100));
+                var lineEl = this.currentSlide.DOM.animatedLine;
+                var lineTl = new TimelineMax({delay:0});
+                var lineTlEasing = Power4.easeInOut;
+                lineTl.add( TweenLite.to(lineEl, 0.8, {  width: this.contents[this.current].DOM.el.offsetWidth, x: leftPos, ease: lineTlEasing}));
+                lineTl.play();
+            }
         }
 
         showContent(finishShowContent) {
@@ -285,13 +281,16 @@
             
             this.isContentOpen = true;
             this.DOM.el.classList.add('slideshow--previewopen');
+
+            slideshow.animateLine();
+
             TweenMax.to(this.DOM.deco, .8, {
                 ease: Power4.easeInOut,
                 scaleX: winsize.width/this.DOM.deco.offsetWidth,
                 scaleY: winsize.height/this.DOM.deco.offsetHeight,
-                x: -20,
-                y: 20,
-                onComplete: finishShowContent,
+                x: -40,
+                y: 40,
+                onComplete: slideshow.finishShowContent,
                 onCompleteParams: [this.DOM.deco]
             });
             // Move away right/left slides.
@@ -302,17 +301,20 @@
             // Show content and back arrow (to close the content).
             this.contents[this.current].show();
             // Hide texts.
-            // this.currentSlide.hideTexts(true);
+            this.currentSlide.hideTexts();
         }
         // callback method for showContent
         finishShowContent() {
         	// not being used currently
+            console.log('slide in');
         }
         hideContent() {
             if ( !this.isContentOpen || this.isAnimating ) return;
 
             this.DOM.el.classList.remove('slideshow--previewopen');
 
+            // animate line back to size
+            slideshow.animateLine(true);
             // Hide content.
             this.contents[this.current].hide();
 
@@ -340,25 +342,42 @@
         }
 
         // callback method for when content is shown and then playing the video
-		showComplete(assetWrap) {
-			console.log(assetWrap.getElementsByTagName('video') + " : value of assetwrap");
+		showComplete(assetWrap, contentItem) {
 			this.isVideo = assetWrap.getElementsByTagName('video').length > 0 ? true : false;
-			
-			if(this.isVideo) {
+			if(this.isVideo) { // 
 				var video = assetWrap.getElementsByTagName('video')[0];
 				video.addEventListener("ended",function() { slideshow.hideContent(); });
-				video.play();
-			} else {
-				// content is not a video so we just let it hang for a bit before we call next
+
+                var videoTimeline = new TimelineMax({delay:0});
+                var videoTimelineEasing = Power4.easeInOut;
+
+                // videoTimeline.add( TweenLite.to(assetWrap, 0, {position: 'fixed', bottom: '-20%', right: '-30%', scaleXY: 0, height: '0', width: '0'}), "one");
+                // videoTimeline.add( TweenLite.to(video, 0, {scaleXY: 0}), "one");
+
+                // video.pause();
+
+                
+
+                videoTimeline.add( TweenLite.to(assetWrap, 0.5, {opacity: 0}));
+
+                videoTimeline.add( TweenLite.to(assetWrap, 0.9, {position: 'fixed', left: '40%', top: '40%', transformOrigin: "40% 40%", scale: 0}),"-=0.1");
+
+                videoTimeline.add( TweenLite.to(assetWrap, 0.9, {opacity: 1, left: 0, right: 0, top: 0, bottom: 0, scale: 1, onComplete: function() {video.play();}}), "two");
+                // videoTimeline.add( TweenLite.to(video, 0.9, { width: '100vw', height: 'auto', scaleXY: 1}), "two-=0.9");
+
+                // videoTimeline.add( TweenLite.to(video, 1.6, { width: '100vw', height: '100vh', ease: videoTimelineEasing}), "two-=1.6"); // "heroMiddleLabel+=0.5"
+
+                // videoTimeline.play();
+                // remove video play
 				
+                // uncomment slideshow.hideContent()
+                // slideshow.hideContent();
+			} else {
+				// content is not a video so we just let it hang for a bit before we call hideContent
 				setTimeout(function() {
-				 	slideshow.hideContent(); // slideshow.finishShowContent callback unneeded right now
+				 	slideshow.hideContent();
 				},6000);
 			}
-		}
-		// init events for video and html content
-		initVideoEvents() {
-
 		}
 	}
 
@@ -372,16 +391,8 @@
 	// Init slideshow.
     const slideshow = new Slideshow(document.querySelector('.slideshow'));
 
-	// setTimeout(function() {
-	// 	slideshow.navigate('next')
-	// },2000);
-
 	setTimeout(function() {
-	 	slideshow.showContent(); // slideshow.finishShowContent callback unneeded right now
-	},6000);
-
-	// setTimeout(function() {
-	//  	slideshow.hideContent();
-	// },4000);	
+	 	slideshow.showContent();
+	},1000);
 
 }
